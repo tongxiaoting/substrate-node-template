@@ -114,3 +114,14 @@ fn transfer_claim_failed_when_claim_no_exist() {
     })
 }
 
+#[test]
+fn create_claim_failed_when_claim_too_long() {
+    new_test_ext().execute_with(|| {
+        let claim = vec![0, 1, 2, 3, 4, 5];
+        assert_noop!(
+            PoeModule::create_claim(Origin::signed(1), claim.clone()),
+            Error::<Test>::ProofTooLong
+        );
+    });
+}
+

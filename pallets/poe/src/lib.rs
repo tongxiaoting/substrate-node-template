@@ -18,6 +18,8 @@ mod tests;
 pub trait Config: frame_system::Config {
 	/// Because this pallet emits events, it depends on the runtime's definition of an event.
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
+
+    type MaxClaimLength: Get<u32>;
 }
 
 // The pallet's runtime storage items.
@@ -58,6 +60,9 @@ decl_error! {
         NoSuchProof,
         /// The proof is claimed by another account, so caller can't revoke it.
         NotProofOwner,
+
+        ProofTooLong,
+
 	}
 }
 
@@ -82,6 +87,8 @@ decl_module! {
 
             // Verify that the specified proof has not already been claimed.
             ensure!(!Proofs::<T>::contains_key(&proof), Error::<T>::ProofAlreadyClaimed);
+
+            ensure!(T::MaxClaimLength::get() >= proof.len() as u32,Error::<T>::ProofTooLong);
 
             // Get the block number from the FRAME System module.
             let current_block = <frame_system::Module<T>>::block_number();
@@ -140,7 +147,6 @@ decl_module! {
             // Emit an event that the claim was transfered.
             Self::deposit_event(RawEvent::ClaimTransfered(sender, dest, proof));
         }
-
 		
 	}
 }
